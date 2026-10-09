@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Word in Mind — AI Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #f7f4ef;
+    --bg-2:      #efe9e0;
+    --card:      #fffdfa;
+    --ink:       #1c1a17;
+    --ink-soft:  #55504a;
+    --ink-faint: #918a80;
+    --line:      #e6dfd4;
+    --bronze:    #9a7b4f;
+    --bronze-d:  #7d6340;
+    --sage:      #5c7a63;
+    --clay:      #a8563f;
+    --amber:     #b8860b;
+    --slate:     #5a7b8a;
+    --shadow:    0 1px 2px rgba(28,26,23,.04), 0 12px 40px -12px rgba(28,26,23,.14);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; padding: 48px 20px 72px;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #fffdf9 0%, transparent 60%),
+      linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex; justify-content: center;
+  }
+  .shell { width: 100%; max-width: 720px; animation: rise .8s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px);} to { opacity: 1; transform: none;} }
+
+  header { text-align: center; margin-bottom: 40px; position: relative; }
+  .eyebrow { font-size: 11px; letter-spacing: .28em; text-transform: uppercase; color: var(--bronze); font-weight: 500; margin-bottom: 18px; }
+  h1 { font-family: 'Fraunces', Georgia, serif; font-weight: 300; font-size: clamp(2rem, 6vw, 3rem); line-height: 1.08; letter-spacing: -.02em; margin: 0 0 14px; }
+  h1 em { font-style: italic; font-weight: 400; color: var(--bronze); }
+  .lede { color: var(--ink-soft); font-size: 15px; line-height: 1.65; max-width: 46ch; margin: 0 auto; font-weight: 300; }
+  .rule { width: 40px; height: 1px; background: var(--bronze); opacity: .5; margin: 26px auto 0; }
+
+  .gear {
+    position: absolute; top: -8px; right: 0;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink-soft);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s ease;
+    font-size: 15px;
+  }
+  .gear:hover { border-color: var(--bronze); color: var(--bronze-d); transform: rotate(45deg); }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); padding: 34px 34px 30px; position: relative; overflow: hidden; }
+  .card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(154,123,79,.45), transparent); }
+
+  .status-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--sage); padding: 4px 10px; border-radius: 999px; background: rgba(92,122,99,.08); border: 1px solid rgba(92,122,99,.2); margin-bottom: 14px; }
+  .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--sage); }
+  .status-pill.off { color: var(--ink-faint); background: rgba(145,138,128,.08); border-color: rgba(145,138,128,.2); }
+  .status-pill.off .dot { background: var(--ink-faint); }
+  .status-pill.busy { color: var(--bronze-d); background: rgba(154,123,79,.08); border-color: rgba(154,123,79,.25); }
+  .status-pill.busy .dot { background: var(--bronze); animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: .3; } }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 30px; }
+  .stat { background: var(--card); padding: 16px 12px; text-align: center; }
+  .stat dt { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-faint); font-weight: 500; margin: 0 0 6px; }
+  .stat dd { margin: 0; font-family: 'Fraunces', Georgia, serif; font-size: 22px; font-weight: 400; font-variant-numeric: tabular-nums; color: var(--ink); }
+
+  .progress { height: 2px; background: var(--line); border-radius: 2px; overflow: hidden; margin-bottom: 24px; }
+  .progress span { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--bronze), var(--bronze-d)); border-radius: 2px; transition: width .55s cubic-bezier(.4,0,.2,1); }
+
+  .stage { min-height: 168px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 4px 0 8px; transition: opacity .25s ease, transform .25s ease; }
+  .stage.swap { opacity: 0; transform: translateY(6px); }
+  .stage .tier { font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 12px; font-weight: 500; }
+  .stage .prompt { font-family: 'Fraunces', Georgia, serif; font-weight: 300; font-size: clamp(1.35rem, 4vw, 1.85rem); line-height: 1.35; letter-spacing: -.01em; margin: 0 0 10px; max-width: 26ch; }
+  .stage .prompt .word { font-style: italic; font-weight: 400; color: var(--bronze-d); white-space: nowrap; }
+  .stage .hint { font-size: 13px; font-weight: 300; color: var(--ink-faint); letter-spacing: .02em; margin: 0; min-height: 20px; }
+  .icon { font-size: 30px; line-height: 1; margin-bottom: 14px; opacity: .85; }
+
+  .candidates { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 14px; max-width: 90%; }
+  .candidates .c {
+    font-size: 11px; padding: 3px 9px; border-radius: 999px;
+    background: rgba(154,123,79,.08); border: 1px solid rgba(154,123,79,.2);
+    color: var(--bronze-d); font-style: italic;
+    font-family: 'Fraunces', Georgia, serif;
+    animation: chipIn .3s ease both;
+  }
+  @keyframes chipIn { from { opacity: 0; transform: scale(.9);} to { opacity: 1; transform: none;} }
+
+  .thinking { display: inline-flex; gap: 4px; align-items: center; justify-content: center; margin-top: 4px; }
+  .thinking i { width: 5px; height: 5px; border-radius: 50%; background: var(--bronze); opacity: .4; animation: dot 1.2s infinite ease-in-out; }
+  .thinking i:nth-child(2) { animation-delay: .15s; }
+  .thinking i:nth-child(3) { animation-delay: .3s; }
+  @keyframes dot { 0%, 60%, 100% { opacity: .25; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+
+  .answers { display: none; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 6px; }
+  .answers.on { display: grid; }
+  .btn { appearance: none; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-family: inherit; font-size: 14px; font-weight: 500; letter-spacing: .01em; padding: 15px 8px; border-radius: 12px; cursor: pointer; transition: all .2s ease; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px -8px rgba(28,26,23,.28); }
+  .btn:active { transform: translateY(0); }
+  .btn:focus-visible { outline: 2px solid var(--bronze); outline-offset: 2px; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+  .btn .key { font-size: 10px; font-weight: 600; letter-spacing: .08em; color: var(--ink-faint); border: 1px solid var(--line); border-radius: 4px; padding: 2px 5px; line-height: 1; }
+  .btn-yes:hover       { border-color: var(--sage);  color: var(--sage); }
+  .btn-maybe:hover     { border-color: var(--amber); color: var(--amber); }
+  .btn-sometimes:hover { border-color: var(--slate); color: var(--slate); }
+  .btn-no:hover        { border-color: var(--clay);  color: var(--clay); }
+  .btn-yes:hover .key, .btn-maybe:hover .key, .btn-sometimes:hover .key, .btn-no:hover .key { color: inherit; border-color: currentColor; opacity: .5; }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 28px; padding-top: 26px; border-top: 1px solid var(--line); }
+  .btn-sm { font-size: 13px; padding: 10px 18px; border-radius: 999px; background: transparent; border: 1px solid var(--line); color: var(--ink-soft); }
+  .btn-sm:hover { border-color: var(--bronze); color: var(--bronze-d); box-shadow: none; }
+  .btn-primary { background: var(--ink); border-color: var(--ink); color: var(--card); }
+  .btn-primary:hover { background: var(--bronze-d); border-color: var(--bronze-d); color: #fff; }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+  .log-wrap { margin-top: 26px; border-top: 1px solid var(--line); padding-top: 20px; }
+  .log-title { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-faint); font-weight: 500; margin-bottom: 14px; text-align: center; }
+  #log { max-height: 220px; overflow-y: auto; font-size: 13px; font-weight: 300; color: var(--ink-soft); line-height: 1.5; }
+  #log::-webkit-scrollbar { width: 5px; }
+  #log::-webkit-scrollbar-thumb { background: var(--line); border-radius: 5px; }
+  .entry { display: flex; gap: 12px; padding: 7px 2px; animation: slide .35s ease both; }
+  @keyframes slide { from { opacity: 0; transform: translateX(-6px);} to { opacity: 1; transform: none;} }
+  .entry .n { font-variant-numeric: tabular-nums; color: var(--ink-faint); min-width: 20px; text-align: right; flex-shrink: 0; }
+  .entry .a { margin-left: auto; font-weight: 500; letter-spacing: .06em; font-size: 11px; text-transform: uppercase; flex-shrink: 0; }
+  .entry .a.yes       { color: var(--sage); }
+  .entry .a.maybe     { color: var(--amber); }
+  .entry .a.sometimes { color: var(--slate); }
+  .entry .a.no        { color: var(--clay); }
+  .entry.note { color: var(--bronze-d); font-style: italic; font-size: 12px; padding-left: 32px; }
+  .empty { text-align: center; color: var(--ink-faint); font-size: 12.5px; font-style: italic; padding: 6px 0; }
+
+  footer { text-align: center; margin-top: 34px; font-size: 12px; font-weight: 300; color: var(--ink-faint); line-height: 1.7; }
+
+  .overlay { position: fixed; inset: 0; z-index: 200; background: rgba(28,26,23,.35); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 20px; }
+  .overlay.on { display: flex; }
+  .sheet { width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto; background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 30px 80px -20px rgba(28,26,23,.4); padding: 30px 28px 24px; animation: sheetIn .35s cubic-bezier(.2,.8,.2,1); }
+  .sheet::-webkit-scrollbar { width: 6px; }
+  .sheet::-webkit-scrollbar-thumb { background: var(--line); border-radius: 6px; }
+  @keyframes sheetIn { from { opacity: 0; transform: translateY(12px) scale(.98);} to { opacity: 1; transform: none;} }
+  .sheet h2 { font-family: 'Fraunces', Georgia, serif; font-weight: 300; font-size: 22px; margin: 0 0 6px; letter-spacing: -.01em; }
+  .sheet p.sub { font-size: 13px; color: var(--ink-faint); font-weight: 300; margin: 0 0 22px; line-height: 1.55; }
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); font-weight: 500; margin-bottom: 8px; }
+  .field input, .field select { width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 12px 14px; font-family: inherit; font-size: 14px; color: var(--ink); transition: border-color .2s; }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--bronze); }
+  .field .help { font-size: 12px; color: var(--ink-faint); margin-top: 8px; line-height: 1.55; font-weight: 300; }
+  .field .help a { color: var(--bronze-d); text-decoration: none; border-bottom: 1px solid rgba(154,123,79,.3); }
+  .field .help a:hover { border-bottom-color: var(--bronze-d); }
+  .sheet-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; flex-wrap: wrap; }
+
+  @media (max-width: 620px) {
+    body { padding: 34px 14px 56px; }
+    .card { padding: 26px 20px 22px; border-radius: 16px; }
+    .stat dd { font-size: 19px; }
+    .answers { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .btn { padding: 15px 10px; font-size: 14px; }
+    .btn .key { display: none; }
+    .gear { top: -4px; right: 0; width: 32px; height: 32px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <header>
+    <button class="gear" id="gearBtn" title="Settings">⚙</button>
+    <div class="eyebrow">Yes · Maybe · Sometimes · No</div>
+    <h1>A Word <em>in Mind</em></h1>
+    <p class="lede">Think of any word. The AI asks questions about it and gets sharper the more you play together.</p>
+    <div class="rule"></div>
+  </header>
+
+  <main class="card">
+    <div class="status-pill off" id="statusPill"><span class="dot"></span><span id="statusText">Not connected</span></div>
+
+    <dl class="stats">
+      <div class="stat"><dt>Asked</dt><dd id="statAsked">0</dd></div>
+      <div class="stat"><dt>Questions left</dt><dd id="statLeft">20</dd></div>
+      <div class="stat"><dt>Model</dt><dd id="statModel">—</dd></div>
+    </dl>
+
+    <div class="progress"><span id="bar"></span></div>
+
+    <div class="stage" id="stage">
+      <p class="tier" id="tier"></p>
+      <p class="prompt" id="prompt">Ready when you are.</p>
+      <p class="hint" id="hint">Add your API key in settings, then press Begin.</p>
+      <div class="candidates" id="candidates"></div>
+    </div>
+
+    <div class="answers" id="answers">
+      <button class="btn btn-yes"       id="yesBtn">Yes <span class="key">Y</span></button>
+      <button class="btn btn-maybe"     id="maybeBtn">Maybe <span class="key">M</span></button>
+      <button class="btn btn-sometimes" id="sometimesBtn">Sometimes <span class="key">S</span></button>
+      <button class="btn btn-no"        id="noBtn">No <span class="key">N</span></button>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn btn-sm btn-primary" id="startBtn">Begin</button>
+      <button class="btn btn-sm" id="retryBtn" style="display:none">Retry</button>
+      <button class="btn btn-sm" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="log-wrap">
+      <div class="log-title">Trail</div>
+      <div id="log"><div class="empty">No questions asked yet.</div></div>
+    </div>
+  </main>
+
+  <footer>Powered by Google Gemini</footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <h2>Connect AI</h2>
+    <p class="sub">Paste your Google Gemini API key. It stays in this browser only.</p>
+
+    <div class="field">
+      <label for="keyInput">Gemini API key</label>
+      <input type="password" id="keyInput" placeholder="AIza..." autocomplete="off" spellcheck="false">
+      <div class="help">Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a>.</div>
+    </div>
+
+    <div class="field">
+      <label for="modelSelect">Preferred model</label>
+      <select id="modelSelect">
+        <option value="gemini-3.8-flash">gemini-3.8-flash (fast, recommended)</option>
+        <option value="gemini-3.7-flash">gemini-3.7-flash (balanced)</option>
+        <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (fastest, best under load)</option>
+        <option value="gemini-3.6-flash">gemini-3.6-flash</option>
+        <option value="gemini-3.5-flash">gemini-3.5-flash (legacy)</option>
+      </select>
+      <div class="help">If busy, the game automatically falls back to a lighter one.</div>
+    </div>
+
+    <div class="field">
+      <label for="maxInput">Maximum questions</label>
+      <input type="number" id="maxInput" value="20" min="5" max="50">
+    </div>
+
+    <div class="field">
+      <label>
+        <input type="checkbox" id="fallbackInput" checked style="width:auto;display:inline-block;margin-right:8px;vertical-align:middle">
+        Auto-fallback to a lighter model when busy
+      </label>
+    </div>
+
+    <div class="field">
+      <label>
+        <input type="checkbox" id="memoryInput" checked style="width:auto;display:inline-block;margin-right:8px;vertical-align:middle">
+        Learn from every past game
+      </label>
+      <div class="help">The AI quietly reads your previous games before each new one and gets sharper over time.</div>
+    </div>
+
+    <div class="sheet-actions">
+      <button class="btn btn-sm" id="cancelBtn">Cancel</button>
+      <button class="btn btn-sm btn-primary" id="saveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const STORAGE_KEY = "awim_settings_v9";
+  const MEMORY_KEY  = "awim_memory_v3";
+
+  const MAX_STORED_GAMES = 500;
+  const MAX_FULL_TRANSCRIPTS = 6;
+  const MAX_SUMMARY_WORDS = 60;
+  const MAX_TRANSCRIPT_LINES = 12;
+
+  const HARDCODED_KEY = "AQ.Ab8RN6JIhVZLG34jVUo91Foz9Ig8Zz8td2HEswJpWrkpIioyUg";
+
+  const DEFAULTS = {
+    apiKey: HARDCODED_KEY,
+    model: "gemini-3.8-flash",
+    maxQuestions: 20,
+    fallback: true,
+    memory: true,
+  };
+
+  const FALLBACK_CHAIN = [
+    "gemini-3.5-flash-lite",
+    "gemini-3.7-flash",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
+  ];
+
+  const MAX_ATTEMPTS_PER_MODEL = 2;
+  const RETRY_BASE_DELAY_MS     = 1200;
+  const TEMPERATURE             = 0.25;
+  const GUESS_CONFIDENCE_THRESHOLD = 0.85;
+  const MAX_DUPLICATE_RETRIES   = 3;
+
+  const BASE_SYSTEM_PROMPT = `You are a world-class 20-Questions player. The user has thought of an English word. Your job is to identify it using the smallest number of yes/no style questions.
+
+# The user answers in FOUR ways
+- YES       → the word definitely has the trait.
+- NO        → the word definitely does NOT have the trait.
+- MAYBE     → the user is genuinely unsure. Weak, ambiguous evidence.
+- SOMETIMES → the trait is true only in some contexts. Weak, ambiguous evidence.
+
+Treat MAYBE and SOMETIMES as weak signals. Never act as if they were firm YES or firm NO.
+
+# THE MOST IMPORTANT RULE
+NEVER, under any circumstances, ask a question you have already asked in this game.
+NEVER rephrase a question you already asked. "Is it alive?" and "Is it a living thing?" are the SAME question — do not ask both.
+NEVER ask a question whose answer you can already infer from previous answers.
+Before you output a question, silently check your entire list of previous questions. If your new question is even similar to one you already asked, throw it out and ask something different.
+
+# Other rules
+1. Keep a running list of your top candidate words. Update it after every answer.
+2. Ask the question that best SPLITS your candidate list roughly in half.
+3. NEVER ask about spelling, letters, word length, alphabetical order, or how the word is written. Ask only about MEANING and CATEGORY.
+4. Start BROAD (Is it alive? Is it man-made? Is it a place? Is it an idea?) and progressively narrow.
+5. Only guess when the confidence is at least ${GUESS_CONFIDENCE_THRESHOLD} OR when exactly one candidate remains.
+6. Words like "the", "and", "is", "of" are English but not useful words for this game — avoid guessing them.
+
+# Output format
+Respond with ONLY a single JSON object. No markdown fences. No prose.
+
+For a question:
+{"type":"question","text":"Is it alive?","candidates":["cat","tree","mushroom"],"confidence":0.35}
+
+For a guess:
+{"type":"guess","text":"cat","candidates":["cat"],"confidence":0.92}
+
+Field meanings:
+- "text": the question to ask, or the word you are guessing.
+- "candidates": your current short list of the most likely words (2–6 items).
+- "confidence": your probability that your top candidate is correct, from 0 to 1.
+
+# Quality bar
+- Every question must eliminate at least one candidate.
+- Prefer concrete category questions over vague ones.
+- If the user has said MAYBE or SOMETIMES more than three times, switch to very concrete, tangible attributes.`;
+
+  let settings   = loadSettings();
+  let turns      = [];
+  let asked      = 0;
+  let active     = false;
+  let waiting    = false;
+  let currentQ   = null;
+  let lastError  = null;
+  let candidates = [];
+  let currentTranscript = [];
+  let askedQuestions = [];
+  let duplicateRetries = 0;
+
+  const el = {
+    gear:         document.getElementById("gearBtn"),
+    overlay:      document.getElementById("overlay"),
+    keyInput:     document.getElementById("keyInput"),
+    modelSelect:  document.getElementById("modelSelect"),
+    maxInput:     document.getElementById("maxInput"),
+    fallbackInput:document.getElementById("fallbackInput"),
+    memoryInput:  document.getElementById("memoryInput"),
+    saveBtn:      document.getElementById("saveBtn"),
+    cancelBtn:    document.getElementById("cancelBtn"),
+    stage:        document.getElementById("stage"),
+    tier:         document.getElementById("tier"),
+    prompt:       document.getElementById("prompt"),
+    hint:         document.getElementById("hint"),
+    candidates:   document.getElementById("candidates"),
+    answers:      document.getElementById("answers"),
+    yes:          document.getElementById("yesBtn"),
+    maybe:        document.getElementById("maybeBtn"),
+    sometimes:    document.getElementById("sometimesBtn"),
+    no:           document.getElementById("noBtn"),
+    start:        document.getElementById("startBtn"),
+    retry:        document.getElementById("retryBtn"),
+    reset:        document.getElementById("resetBtn"),
+    log:          document.getElementById("log"),
+    bar:          document.getElementById("bar"),
+    statusPill:   document.getElementById("statusPill"),
+    statusText:   document.getElementById("statusText"),
+    statAsked:    document.getElementById("statAsked"),
+    statLeft:     document.getElementById("statLeft"),
+    statModel:    document.getElementById("statModel"),
+  };
+
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { ...DEFAULTS };
+      const parsed = JSON.parse(raw);
+      if (HARDCODED_KEY && !parsed.apiKey) parsed.apiKey = HARDCODED_KEY;
+      return { ...DEFAULTS, ...parsed };
+    } catch { return { ...DEFAULTS }; }
+  }
+  function saveSettings(s) {
+    settings = { ...DEFAULTS, ...s };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch {}
+  }
+
+  /* ══════════════════════════════════════════════════════
+     SILENT MEMORY
+     ══════════════════════════════════════════════════════ */
+  function loadMemory() {
+    try {
+      const raw = localStorage.getItem(MEMORY_KEY);
+      if (!raw) return { games: [] };
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.games)) return { games: [] };
+      return parsed;
+    } catch { return { games: [] }; }
+  }
+  function saveMemory(mem) {
+    try { localStorage.setItem(MEMORY_KEY, JSON.stringify(mem)); } catch {}
+  }
+  function recordGame(word, won) {
+    if (!settings.memory) return;
+    const mem = loadMemory();
+    mem.games.push({
+      word: word || "?",
+      won: !!won,
+      when: Date.now(),
+      transcript: currentTranscript.slice(0, 40).map(t => ({ q: t.q, a: t.a })),
+    });
+    if (mem.games.length > MAX_STORED_GAMES) mem.games = mem.games.slice(-MAX_STORED_GAMES);
+    saveMemory(mem);
+  }
+
+  /* Build a compact memory block for the system prompt.
+     All games ever played feed the summary; the most recent also get full transcripts. */
+  function memoryBlock() {
+    if (!settings.memory) return "";
+    const mem = loadMemory();
+    if (!mem.games.length) return "";
+
+    const games = mem.games;
+    const total = games.length;
+    const wins  = games.filter(g => g.won).length;
+
+    // Summary of every game — word list only
+    const allWords = games.map(g => g.word).filter(w => w && w !== "?");
+    const uniqueWords = [...new Set(allWords)];
+    const summary = uniqueWords.slice(-MAX_SUMMARY_WORDS);
+
+    let out = "\n# What you remember about this player\n";
+    out += `You have played ${total} game${total === 1 ? "" : "s"} together. `;
+    out += `You guessed right ${wins} time${wins === 1 ? "" : "s"} `;
+    out += `(${Math.round((wins / total) * 100)}% win rate).\n\n`;
+
+    if (summary.length) {
+      out += `Words this player has used before (most recent ${summary.length}):\n`;
+      out += "  " + summary.join(", ") + "\n";
+      if (uniqueWords.length > summary.length) {
+        out += `  …and ${uniqueWords.length - summary.length} more.\n`;
+      }
+      out += "\n";
+    }
+
+    // Full transcripts of the most recent games
+    const recent = games.slice(-MAX_FULL_TRANSCRIPTS);
+    out += `Full transcripts of the last ${recent.length} game${recent.length === 1 ? "" : "s"}:\n\n`;
+    recent.forEach((g, i) => {
+      const idx = total - recent.length + i + 1;
+      out += `Game ${idx} — the word was "${g.word}". You ${g.won ? "got it" : "missed it"}.\n`;
+      const t = g.transcript.slice(0, MAX_TRANSCRIPT_LINES);
+      for (const step of t) out += `  ${step.q} → ${step.a}\n`;
+      if (g.transcript.length > MAX_TRANSCRIPT_LINES) out += "  …\n";
+      out += "\n";
+    });
+
+    out += "# How to use this\n";
+    out += "- Reuse question styles and category branches that led to a correct guess.\n";
+    out += "- Avoid styles and branches that led to misses or many MAYBEs.\n";
+    out += "- If the player tends to pick similar words, bias your early questions accordingly.\n";
+
+    return out;
+  }
+
+  function systemPrompt() { return BASE_SYSTEM_PROMPT + memoryBlock(); }
+
+  /* ══════════════════════════════════════════════════════
+     DUPLICATE DETECTION
+     ══════════════════════════════════════════════════════ */
+  function normalizeQuestion(q) {
+    return String(q || "")
+      .toLowerCase()
+      .replace(/[?.,!;:'"()\[\]{}\-–—]/g, " ")
+      .replace(/\b(is|it|the|a|an|does|do|can|could|would|are|was|were|be|being|been|has|have|had|of|to|in|on|at|for|with)\b/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function contentWords(q) {
+    const stop = new Set(["is","it","the","a","an","does","do","can","could","would","are","was","were","be","being","been","has","have","had","of","to","in","on","at","for","with","alive","living","thing"]);
+    return normalizeQuestion(q).split(" ").filter(w => w.length > 1 && !stop.has(w)).sort();
+  }
+
+  function isDuplicate(newQ, askedList) {
+    const a = contentWords(newQ);
+    if (a.length === 0) return false;
+    for (const prev of askedList) {
+      const b = contentWords(prev);
+      if (a.length === b.length && a.every((w, i) => w === b[i])) return true;
+      if (normalizeQuestion(newQ) === normalizeQuestion(prev)) return true;
+    }
+    return false;
+  }
+
+  /* ══════════════════════════════════════════════════════
+     UI HELPERS
+     ══════════════════════════════════════════════════════ */
+  function setPrompt(html, hint = "", tier = "") {
+    el.stage.classList.add("swap");
+    setTimeout(() => {
+      el.tier.textContent = tier;
+      el.prompt.innerHTML = html;
+      el.hint.innerHTML   = hint;
+      el.stage.classList.remove("swap");
+    }, 180);
+  }
+
+  function setCandidates(list) {
+    el.candidates.innerHTML = "";
+    if (!Array.isArray(list) || list.length === 0) return;
+    for (const c of list) {
+      const chip = document.createElement("span");
+      chip.className = "c";
+      chip.textContent = c;
+      el.candidates.appendChild(chip);
+    }
+  }
+
+  function setThinking(on) {
+    waiting = on;
+    el.yes.disabled       = on;
+    el.maybe.disabled     = on;
+    el.sometimes.disabled = on;
+    el.no.disabled        = on;
+    if (on) el.hint.innerHTML = '<span class="thinking"><i></i><i></i><i></i></span>';
+  }
+
+  function setStatus(kind, text) {
+    el.statusPill.classList.remove("off", "busy");
+    if (kind === "off") el.statusPill.classList.add("off");
+    if (kind === "busy") el.statusPill.classList.add("busy");
+    el.statusText.textContent = text;
+  }
+
+  function updateStatusPill() {
+    if (!settings.apiKey) setStatus("off", "Not connected");
+    else setStatus("on", "Connected · " + settings.model);
+  }
+
+  function updateStats() {
+    el.statAsked.textContent = asked;
+    el.statLeft.textContent  = Math.max(0, settings.maxQuestions - asked);
+    el.statModel.textContent = settings.apiKey ? settings.model.replace("gemini-", "") : "—";
+    const progress = Math.min(100, (asked / settings.maxQuestions) * 100);
+    el.bar.style.width = progress + "%";
+  }
+
+  function addEntry(n, text, answer) {
+    if (el.log.querySelector(".empty")) el.log.innerHTML = "";
+    let cls, label;
+    if (answer === true)         { cls = "yes";       label = "Yes"; }
+    else if (answer === false)   { cls = "no";        label = "No"; }
+    else if (answer === "maybe") { cls = "maybe";     label = "Maybe"; }
+    else                         { cls = "sometimes"; label = "Sometimes"; }
+    const row = document.createElement("div");
+    row.className = "entry";
+    row.innerHTML =
+      '<span class="n">' + String(n).padStart(2, "0") + '</span>' +
+      '<span class="q">' + escapeHtml(text) + '</span>' +
+      '<span class="a ' + cls + '">' + label + '</span>';
+    el.log.appendChild(row);
+    el.log.scrollTop = el.log.scrollHeight;
+  }
+
+  function addNote(text) {
+    if (el.log.querySelector(".empty")) el.log.innerHTML = "";
+    const row = document.createElement("div");
+    row.className = "entry note";
+    row.textContent = "· " + text;
+    el.log.appendChild(row);
+    el.log.scrollTop = el.log.scrollHeight;
+  }
+
+  function clearLog() { el.log.innerHTML = '<div class="empty">No questions asked yet.</div>'; }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  function showRetry(show) { el.retry.style.display = show ? "" : "none"; }
+
+  function answerWord(a) {
+    if (a === true)    return "YES";
+    if (a === false)   return "NO";
+    if (a === "maybe") return "MAYBE";
+    return "SOMETIMES";
+  }
+
+  function buildContents() {
+    const out = [];
+    for (const t of turns) {
+      if (t.role === "assistant") out.push({ role: "model", parts: [{ text: t.text }] });
+      else out.push({ role: "user", parts: [{ text: t.text }] });
+    }
+    if (turns.length === 0) {
+      out.push({ role: "user", parts: [{ text: "Start the game. Ask your first question." }] });
+    }
+    return out;
+  }
+
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+  async function callModel(model) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(settings.apiKey)}`;
+    const body = {
+      systemInstruction: { parts: [{ text: systemPrompt() }] },
+      contents: buildContents(),
+      generationConfig: {
+        temperature: TEMPERATURE,
+        topP: 0.9,
+        maxOutputTokens: 400,
+        responseMimeType: "application/json",
+      },
+    };
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      let msg = `HTTP ${res.status}`;
+      try {
+        const err = await res.json();
+        if (err && err.error && err.error.message) msg = err.error.message;
+      } catch {}
+      const e = new Error(msg);
+      e.status = res.status;
+      e.retriable = (res.status === 429 || res.status === 503 || res.status === 500 || res.status === 504);
+      e.modelGone = (res.status === 404);
+      throw e;
+    }
+    const data = await res.json();
+    const text = (data?.candidates?.[0]?.content?.parts || [])
+      .map(p => p.text || "").join("").trim();
+    if (!text) { const e = new Error("Empty response from model."); e.retriable = true; throw e; }
+    return parseModelOutput(text);
+  }
+
+  async function askAI() {
+    const chain = [settings.model];
+    if (settings.fallback) for (const m of FALLBACK_CHAIN) if (!chain.includes(m)) chain.push(m);
+    let lastErr = null;
+
+    for (let i = 0; i < chain.length; i++) {
+      const model = chain[i];
+      const isFallback = (i > 0);
+      if (isFallback) {
+        setStatus("busy", "Trying " + model + "…");
+        addNote("Switching to " + model + " (preferred model busy)");
+      }
+      for (let attempt = 0; attempt < MAX_ATTEMPTS_PER_MODEL; attempt++) {
+        try {
+          const result = await callModel(model);
+          if (isFallback && settings.fallback) {
+            settings.model = model;
+            saveSettings(settings);
+            updateStatusPill();
+            updateStats();
+            addNote("Staying on " + model + " for this session");
+          } else {
+            setStatus("on", "Connected · " + settings.model);
+          }
+          return result;
+        } catch (err) {
+          lastErr = err;
+          if (err.modelGone) { addNote("Model " + model + " unavailable"); break; }
+          if (!err.retriable) throw err;
+          if (attempt < MAX_ATTEMPTS_PER_MODEL - 1) {
+            const delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
+            const secs = Math.round(delay / 1000);
+            setStatus("busy", "Model busy — retrying in " + secs + "s…");
+            setPrompt("The model is busy.", "Retrying in " + secs + " second" + (secs === 1 ? "" : "s") + "…", "");
+            await sleep(delay);
+            setThinking(true);
+          }
+        }
+      }
+    }
+    throw lastErr || new Error("All models unavailable.");
+  }
+
+  function parseModelOutput(text) {
+    let t = text.trim();
+    if (t.startsWith("```")) t = t.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+    let obj = null;
+    try { obj = JSON.parse(t); } catch {}
+    if (!obj) {
+      const m = t.match(/\{[\s\S]*\}/);
+      if (m) { try { obj = JSON.parse(m[0]); } catch {} }
+    }
+    if (obj && (obj.type === "question" || obj.type === "guess") && obj.text) {
+      return {
+        type: obj.type,
+        text: String(obj.text).trim(),
+        candidates: Array.isArray(obj.candidates) ? obj.candidates.map(String).slice(0, 8) : [],
+        confidence: typeof obj.confidence === "number" ? obj.confidence : null,
+        raw: t,
+      };
+    }
+    return { type: "question", text: t.replace(/^["']|["']$/g, "").slice(0, 140), candidates: [], confidence: null, raw: t };
+  }
+
+  /* ══════════════════════════════════════════════════════
+     GAME FLOW
+     ══════════════════════════════════════════════════════ */
+  async function begin() {
+    if (!settings.apiKey) {
+      openSettings();
+      setPrompt("Add your API key first.", "Click the gear in the top right.", "");
+      return;
+    }
+    turns = []; asked = 0; active = true; currentQ = null; lastError = null;
+    candidates = []; currentTranscript = [];
+    askedQuestions = []; duplicateRetries = 0;
+    showRetry(false);
+    el.answers.classList.add("on");
+    clearLog();
+    setCandidates([]);
+    updateStats();
+    setPrompt("Think of any word.", "I'll start asking.", "");
+    setTimeout(nextTurn, 700);
+  }
+
+  async function nextTurn() {
+    if (!active) return;
+    if (asked >= settings.maxQuestions) return endGame("timeout");
+
+    setThinking(true);
+    showRetry(false);
+    setPrompt("…", "", "");
+
+    let result;
+    try {
+      result = await askAI();
+    } catch (err) {
+      setThinking(false);
+      lastError = err;
+      setStatus("off", "Connection problem");
+      showRetry(true);
+      setPrompt("Couldn't reach the AI.", friendlyError(err) + " — press Retry to try again.", "");
+      return;
+    }
+
+    setThinking(false);
+    setStatus("on", "Connected · " + settings.model);
+
+    if (result.candidates && result.candidates.length) {
+      candidates = result.candidates;
+      setCandidates(candidates);
+    }
+
+    /* Duplicate check */
+    if (result.type === "question" && isDuplicate(result.text, askedQuestions)) {
+      duplicateRetries++;
+      addNote("Caught a repeat — asking the AI to try again");
+      if (duplicateRetries > MAX_DUPLICATE_RETRIES) {
+        turns.push({ role: "assistant", text: result.raw });
+        turns.push({ role: "user", text:
+          "You keep repeating questions. Do NOT ask another question. Output your best guess now as {\"type\":\"guess\",\"text\":\"...\",\"candidates\":[...],\"confidence\":0.5}"
+        });
+        duplicateRetries = 0;
+        return setTimeout(nextTurn, 200);
+      }
+      turns.push({ role: "assistant", text: result.raw });
+      turns.push({ role: "user", text:
+        "You already asked that question (or one very similar). Do NOT ask it again. Ask a COMPLETELY DIFFERENT question on a new axis."
+      });
+      return setTimeout(nextTurn, 200);
+    }
+    duplicateRetries = 0;
+
+    /* Confidence gate */
+    if (
+      result.type === "guess" &&
+      asked < settings.maxQuestions - 1 &&
+      result.confidence !== null &&
+      result.confidence < GUESS_CONFIDENCE_THRESHOLD
+    ) {
+      addNote("Not confident enough — asking the AI to keep narrowing");
+      turns.push({ role: "assistant", text: result.raw });
+      turns.push({ role: "user", text:
+        "Your confidence was too low. Do NOT guess yet. Ask another question that splits your candidates."
+      });
+      return setTimeout(nextTurn, 200);
+    }
+
+    turns.push({ role: "assistant", text: result.raw });
+
+    if (result.type === "guess") {
+      currentQ = { type: "guess", text: result.text, confidence: result.confidence };
+      const confidenceLine = result.confidence !== null
+        ? "I'm " + Math.round(result.confidence * 100) + "% sure."
+        : "I think I've got it.";
+      setPrompt(
+        'Is your word <span class="word">' + escapeHtml(result.text) + '</span>?',
+        confidenceLine, "My guess"
+      );
+    } else {
+      askedQuestions.push(result.text);
+      currentQ = { type: "question", text: result.text };
+      const left = settings.maxQuestions - asked;
+      let hint = left + " questions left.";
+      if (result.confidence !== null && result.confidence > 0) {
+        hint += " · top guess: " + Math.round(result.confidence * 100) + "%";
+      }
+      setPrompt(escapeHtml(result.text), hint, "Question " + (asked + 1));
+    }
+  }
+
+  function friendlyError(err) {
+    if (!err) return "Unknown error.";
+    if (err.status === 429) return "Rate limit reached. Wait a moment.";
+    if (err.status === 503) return "Model overloaded. Try again shortly.";
+    if (err.status === 404) return "Model not found. Pick a different one in settings.";
+    if (err.status === 403) return "API key rejected. Check it in settings.";
+    if (err.status === 400) return "Bad request — the model rejected the prompt.";
+    return escapeHtml(err.message);
+  }
+
+  function answer(value) {
+    if (!active || waiting || !currentQ) return;
+    asked++;
+    updateStats();
+    addEntry(asked, currentQ.text, value);
+    currentTranscript.push({ q: currentQ.text, a: answerWord(value) });
+    turns.push({ role: "user", text: answerWord(value) });
+
+    if (currentQ.type === "guess" && value === true) return endGame("won", currentQ.text);
+    if (currentQ.type === "guess" && value === false) {
+      turns.push({ role: "user", text: "Wrong. Keep asking questions." });
+    }
+    currentQ = null;
+    setTimeout(nextTurn, 340);
+  }
+
+  function endGame(kind, word) {
+    active = false;
+    el.answers.classList.remove("on");
+    showRetry(false);
+    updateStats();
+    if (kind === "won") {
+      recordGame(word, true);
+      setPrompt('<span class="icon">✦</span>It\'s <span class="word">' + escapeHtml(word) + '</span>.',
+                "Got it in " + asked + " question" + (asked === 1 ? "" : "s") + ".", "");
+    } else if (kind === "timeout") {
+      recordGame(word || (candidates[0] || "?"), false);
+      setPrompt("I'm out of questions.", "You win this round — I couldn't narrow it down.", "");
+    }
+  }
+
+  function reset() {
+    active = false; waiting = false;
+    turns = []; asked = 0; currentQ = null; lastError = null; candidates = [];
+    currentTranscript = []; askedQuestions = []; duplicateRetries = 0;
+    el.answers.classList.remove("on");
+    showRetry(false);
+    clearLog();
+    setCandidates([]);
+    updateStats();
+    updateStatusPill();
+    setPrompt("Ready when you are.", "Press Begin, then keep your word in mind.", "");
+  }
+
+  async function retry() {
+    if (!lastError) return;
+    showRetry(false); lastError = null; active = true;
+    el.answers.classList.add("on");
+    nextTurn();
+  }
+
+  /* ══════════════════════════════════════════════════════
+     SETTINGS
+     ══════════════════════════════════════════════════════ */
+  function openSettings() {
+    el.keyInput.value = settings.apiKey;
+    el.modelSelect.value = settings.model;
+    el.maxInput.value = settings.maxQuestions;
+    el.fallbackInput.checked = settings.fallback;
+    el.memoryInput.checked = settings.memory;
+    el.overlay.classList.add("on");
+    setTimeout(() => el.keyInput.focus(), 100);
+  }
+  function closeSettings() { el.overlay.classList.remove("on"); }
+  function commitSettings() {
+    saveSettings({
+      apiKey: el.keyInput.value.trim(),
+      model: el.modelSelect.value,
+      maxQuestions: Math.max(5, Math.min(50, parseInt(el.maxInput.value, 10) || 20)),
+      fallback: el.fallbackInput.checked,
+      memory: el.memoryInput.checked,
+    });
+    updateStatusPill();
+    updateStats();
+    closeSettings();
+  }
+
+  /* ══════════════════════════════════════════════════════
+     EVENTS
+     ══════════════════════════════════════════════════════ */
+  el.gear.addEventListener("click", openSettings);
+  el.cancelBtn.addEventListener("click", closeSettings);
+  el.saveBtn.addEventListener("click", commitSettings);
+  el.overlay.addEventListener("click", e => { if (e.target === el.overlay) closeSettings(); });
+
+  el.start.addEventListener("click", begin);
+  el.retry.addEventListener("click", retry);
+  el.reset.addEventListener("click", reset);
+  el.yes.addEventListener("click",       () => answer(true));
+  el.maybe.addEventListener("click",     () => answer("maybe"));
+  el.sometimes.addEventListener("click", () => answer("sometimes"));
+  el.no.addEventListener("click",        () => answer(false));
+
+  document.addEventListener("keydown", e => {
+    if (el.overlay.classList.contains("on")) {
+      if (e.key === "Escape") closeSettings();
+      if (e.key === "Enter" && document.activeElement.tagName !== "BUTTON") {
+        e.preventDefault(); commitSettings();
+      }
+      return;
+    }
+    if (e.repeat) return;
+    const k = e.key.toLowerCase();
+    if (!active) {
+      if (k === "enter" && document.activeElement.tagName !== "INPUT") begin();
+      return;
+    }
+    if (waiting) return;
+    if (k === "y" || e.key === "ArrowRight") { e.preventDefault(); answer(true); }
+    if (k === "m" || e.key === "ArrowUp")    { e.preventDefault(); answer("maybe"); }
+    if (k === "s" || e.key === "ArrowDown")  { e.preventDefault(); answer("sometimes"); }
+    if (k === "n" || e.key === "ArrowLeft")  { e.preventDefault(); answer(false); }
+  });
+
+  /* ══════════════════════════════════════════════════════
+     INIT
+     ══════════════════════════════════════════════════════ */
+  updateStatusPill();
+  updateStats();
+})();
+</script>
+
+</body>
+</html>
